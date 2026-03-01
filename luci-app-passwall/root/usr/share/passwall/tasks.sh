@@ -1,6 +1,6 @@
 #!/bin/sh
 
-## 循环更新脚本
+## Loop update script
 
 . /usr/share/passwall/utils.sh
 LOCK_FILE=${LOCK_PATH}/${CONFIG}_tasks.lock

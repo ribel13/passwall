@@ -84,7 +84,7 @@ function restart(var)
 	local LOG = var["-LOG"]
 	sys.call("/etc/init.d/dnsmasq restart >/dev/null 2>&1")
 	if LOG == "1" then
-		api.log("重启 dnsmasq 服务")
+		api.log("Restart dnsmasq Serve")
 	end
 end
 
@@ -111,7 +111,7 @@ function logic_restart(var)
 		sys.call("/etc/init.d/dnsmasq restart >/dev/null 2>&1")
 	end
 	if LOG == "1" then
-		api.log("重启 dnsmasq 服务")
+		api.log("Restart dnsmasq Serve")
 	end
 end
 
@@ -330,7 +330,7 @@ function add_rule(var)
 
 	local only_global
 	if DEFAULT_PROXY_MODE == "proxy" and CHN_LIST == "0" and USE_GFW_LIST == "0" then
-		--没有启用中国列表和GFW列表时
+		--China list is not enabled andGFWlist
 		dnsmasq_default_dns = TUN_DNS
 		only_global = 1
 	end
@@ -345,7 +345,7 @@ function add_rule(var)
 	if not fs.access(CACHE_DNS_PATH) then
 		fs.mkdir(CACHE_DNS_PATH)
 
-		--屏蔽列表
+		--Block list
 		if USE_CHINADNS_NG == "0" then
 			if USE_BLOCK_LIST == "1" then
 				for line in io.lines("/usr/share/passwall/rules/block_host") do
@@ -360,7 +360,7 @@ function add_rule(var)
 		local fwd_dns
 		local no_ipv6
 
-		--始终用国内DNS解析节点域名
+		--Always use domesticDNSResolve node domain name
 		if true then
 			fwd_dns = LOCAL_DNS
 			if USE_CHINADNS_NG == "1" then
@@ -381,17 +381,17 @@ function add_rule(var)
 					process_address(t.address)
 					process_address(t.download_address)
 				end)
-				uci:foreach(appname, "subscribe_list", function(t)  --订阅链接
+				uci:foreach(appname, "subscribe_list", function(t)  --Subscription link
 					local url, _ = api.get_domain_port_from_url(t.url or "")
 					if url and url ~= "" then
 						process_address(url)
 					end
 				end)
-				log(string.format("  - 节点列表中的域名(vpslist)：%s", fwd_dns or "默认"))
+				log(string.format("  - Domain name in node list(vpslist)：%s", fwd_dns or "default"))
 			end
 		end
 
-		--直连（白名单）列表
+		--direct connection（whitelist）list
 		if USE_DIRECT_LIST == "1" then
 			if fs.access("/usr/share/passwall/rules/direct_host") then
 				fwd_dns = LOCAL_DNS
@@ -403,7 +403,7 @@ function add_rule(var)
 						setflag_4 .. "passwall_white",
 						setflag_6 .. "passwall_white6"
 					}
-					--始终用国内DNS解析直连（白名单）列表
+					--Always use domesticDNSAnalyze direct connection（whitelist）list
 					for line in io.lines("/usr/share/passwall/rules/direct_host") do
 						line = api.get_std_domain(line)
 						if line ~= "" and not line:find("#") and not line:find(":") then
@@ -412,12 +412,12 @@ function add_rule(var)
 							set_domain_ipset(line, table.concat(sets, ","))
 						end
 					end
-					log(string.format("  - 域名白名单(whitelist)：%s", fwd_dns or "默认"))
+					log(string.format("  - Domain name whitelist(whitelist)：%s", fwd_dns or "default"))
 				end
 			end
 		end
 
-		--代理（黑名单）列表
+		--acting（blacklist）list
 		if USE_PROXY_LIST == "1" then
 			if fs.access("/usr/share/passwall/rules/proxy_host") then
 				fwd_dns = TUN_DNS
@@ -440,7 +440,7 @@ function add_rule(var)
 					if REMOTE_FAKEDNS == "1" then
 						sets = {}
 					end
-					--始终使用远程DNS解析代理（黑名单）列表
+					--Always use remoteDNSparsing agent（blacklist）list
 					for line in io.lines("/usr/share/passwall/rules/proxy_host") do
 						line = api.get_std_domain(line)
 						if line ~= "" and not line:find("#") and not line:find(":") then
@@ -452,12 +452,12 @@ function add_rule(var)
 							set_domain_ipset(line, table.concat(sets, ","))
 						end
 					end
-					log(string.format("  - 代理域名表(blacklist)：%s", fwd_dns or "默认"))
+					log(string.format("  - Proxy domain name table(blacklist)：%s", fwd_dns or "default"))
 				end
 			end
 		end
 
-		--GFW列表
+		--GFWlist
 		if USE_GFW_LIST == "1" then
 			if fs.access("/usr/share/passwall/rules/gfwlist") then
 				fwd_dns = TUN_DNS
@@ -493,12 +493,12 @@ function add_rule(var)
 							set_domain_ipset(line, table.concat(sets, ","))
 						end
 					end
-					log(string.format("  - 防火墙域名表(gfwlist)：%s", fwd_dns or "默认"))
+					log(string.format("  - Firewall domain name table(gfwlist)：%s", fwd_dns or "default"))
 				end
 			end
 		end
 
-		--中国列表
+		--China list
 		if CHN_LIST ~= "0" then
 			if fs.access("/usr/share/passwall/rules/chnlist") then
 				fwd_dns = nil
@@ -539,12 +539,12 @@ function add_rule(var)
 							set_domain_ipset(line, table.concat(sets, ","))
 						end
 					end
-					log(string.format("  - 中国域名表(chnroute)：%s", fwd_dns or "默认"))
+					log(string.format("  - China domain name table(chnroute)：%s", fwd_dns or "default"))
 				end
 			end
 		end
 
-		--分流规则
+		--Diversion rules
 		if IS_SHUNT_NODE and USE_CHINADNS_NG == "0" then
 			local t = uci:get_all(appname, TCP_NODE)
 			local default_node_id = t["default_node"] or "_direct"
@@ -613,15 +613,15 @@ function add_rule(var)
 						end
 					end
 					if _node_id ~= "_direct" then
-						log(string.format("  - Sing-Box/Xray分流规则(%s)：%s", s.remarks, fwd_dns or "默认"))
+						log(string.format("  - Sing-Box/XrayDiversion rules(%s)：%s", s.remarks, fwd_dns or "default"))
 					end
 				end
 			end)
 		elseif only_global == 1 and NO_PROXY_IPV6 == "1" then
-			--节点：固定节点
-			--代理模式：全局模式
-			--过滤代理域名 IPv6：启用
-			--禁止解析所有IPv6记录
+			--node：fixed node
+			--proxy mode：global mode
+			--Filter proxy domain name IPv6：enable
+			--disable parsing allIPv6Record
 			list1["#"] = {
 				dns = {},
 				ipsets = {},
@@ -697,7 +697,7 @@ function add_rule(var)
 			tinsert(conf_lines, "no-poll")
 			tinsert(conf_lines, "no-resolv")
 			if USE_CHINADNS_NG == "0" then
-				log(string.format("  - 默认：%s", dnsmasq_default_dns))
+				log(string.format("  - default：%s", dnsmasq_default_dns))
 			end
 
 			if FLAG == "default" then
@@ -713,7 +713,7 @@ function add_rule(var)
 	end
 
 	if USE_CHINADNS_NG == "0" then
-		log("  - PassWall必须依赖于Dnsmasq，如果你自行配置了错误的DNS流程，将会导致域名(直连/代理域名)分流失效！！！")
+		log("  - PassWallmust depend onDnsmasq，If you configure the wrongDNSprocess，will result in domain name(direct connection/Proxy domain name)Shunt failure！！！")
 	end
 end
 

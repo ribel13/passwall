@@ -165,7 +165,7 @@ local function check_excluded_domain(value)
 	return false
 end
 
--- 替代 string.find 查找 "^[#!\\[@]+"
+-- substitute string.find Find "^[#!\\[@]+"
 local function is_comment_line(s)
 	if not s or s == "" then return false end
 	local b = s:byte(1)
@@ -176,8 +176,8 @@ local function is_comment_line(s)
 	return false
 end
 
--- IPv4 检测，替代 string.find "^%d+%.%d+%.%d+%.%d+"
--- IPv4 cidr检测，替代 string.find "^%d+%.%d+%.%d+%.%d+[%/][%d]+$"
+-- IPv4 Detection，substitute string.find "^%d+%.%d+%.%d+%.%d+"
+-- IPv4 cidrDetection，substitute string.find "^%d+%.%d+%.%d+%.%d+[%/][%d]+$"
 local function is_ipv4(s, check_cidr)
 	local dot = 0
 	local seg_start = 1
@@ -187,7 +187,7 @@ local function is_ipv4(s, check_cidr)
 	while i <= len do
 		local b = s:byte(i)
 		if b >= 48 and b <= 57 then
-			-- 数字，继续
+			-- number，continue
 		elseif b == 46 then  -- "."
 			dot = dot + 1
 			if dot > 3 or i == seg_start then return false end
@@ -206,13 +206,13 @@ local function is_ipv4(s, check_cidr)
 		end
 		i = i + 1
 	end
-	-- 如果没有 CIDR，则检查最后一段即可
+	-- if not CIDR，Then just check the last paragraph
 	if not check_cidr or not mask_start then
 		if dot ~= 3 or seg_start > len then return false end
 		local seg = tonumber(s:sub(seg_start))
 		return seg and seg <= 255 or false
 	end
-	-- CIDR 掩码检查
+	-- CIDR Mask check
 	if mask_start > len then return false end
 	local mask = tonumber(s:sub(mask_start))
 	return mask and mask >= 0 and mask <= 32 or false
@@ -232,19 +232,19 @@ local function is_ipv6(s, check_cidr)
 	local i = 1
 	local seg_len = 0
 	local segs = 0
-	local saw_dc = false  -- 是否出现 "::"
+	local saw_dc = false  -- Does it appear "::"
 	local b
 	while i <= len do
 		b = s:byte(i)
-		-- CIDR 部分
+		-- CIDR part
 		if b == 47 then  -- '/'
 			if not check_cidr then
 				return false
 			end
-			-- 处理 "/" 之前的段
+			-- deal with "/" previous paragraph
 			if seg_len > 0 then segs = segs + 1 end
 			if (not saw_dc and segs ~= 8) or (saw_dc and segs > 8) then return false end
-			-- 解析掩码
+			-- parse mask
 			i = i + 1
 			if i > len then return false end
 			local mask = 0
@@ -255,10 +255,10 @@ local function is_ipv6(s, check_cidr)
 				if mask > 128 then return false end
 				i = i + 1
 			end
-			-- CIDR 解析成功
+			-- CIDR Parsed successfully
 			return true
 		end
-		-- 冒号处理（: 或 ::）
+		-- Colon handling（: or ::）
 		if b == 58 then
 			local nextb = (i+1 <= len) and s:byte(i+1) or 0
 			-- "::"
@@ -269,14 +269,14 @@ local function is_ipv6(s, check_cidr)
 				seg_len = 0
 				i = i + 2
 			else
-				-- 普通 ":"
+				-- ordinary ":"
 				if seg_len == 0 then return false end
 				segs = segs + 1
 				seg_len = 0
 				i = i + 1
 			end
 		else
-			-- hex 数字
+			-- hex number
 			local is_hex =
 				(b >= 48 and b <= 57) or   -- 0-9
 				(b >= 65 and b <= 70) or   -- A-F
@@ -292,12 +292,12 @@ local function is_ipv6(s, check_cidr)
 	return segs <= 8
 end
 
--- IPv6 cidr检测，替代 string.find ":-[%x]+%:+[%x]-[%/][%d]+$"
+-- IPv6 cidrDetection，substitute string.find ":-[%x]+%:+[%x]-[%/][%d]+$"
 local function is_ipv6_cidr(s)
 	return is_ipv6(s, true)
 end
 
--- 检测是否含有冒号，替代 string.find(line, ":")
+-- Check for colon，substitute string.find(line, ":")
 local function has_colon(s)
 	for i = 1, #s do
 		if s:byte(i) == 58 then  -- ':'
@@ -307,7 +307,7 @@ local function has_colon(s)
 	return false
 end
 
--- 域名提取，替代 string.match "([%w%-]+%.[%w%.%-]+)[%/%*]*"
+-- Domain name extraction，substitute string.match "([%w%-]+%.[%w%.%-]+)[%/%*]*"
 local function extract_domain(s)
 	if not s or s == "" then return nil end
 	local len = #s
@@ -315,7 +315,7 @@ local function extract_domain(s)
 	local last_dot = nil
 	for i = 1, len do
 		local b = s:byte(i)
-		-- 允许的域名字符：a-zA-Z0-9.- 
+		-- Allowed domain name characters：a-zA-Z0-9.- 
 		if (b >= 48 and b <= 57) or (b >= 65 and b <= 90) or (b >= 97 and b <= 122) or b == 45 or b == 46 then
 			if not start then start = i end
 			if b == 46 then last_dot = i end
@@ -348,7 +348,7 @@ local function non_file_check(file_path, header_content)
 	local remote_file_size = nil
 	local local_file_size = tonumber(fs.stat(file_path, "size") or 0)
 	if local_file_size == 0 then
-		log("下载文件为空或读取出错。")
+		log("The download file is empty or there is a reading error。")
 		return true
 	end
 	if header_content and header_content ~= "" then
@@ -360,7 +360,7 @@ local function non_file_check(file_path, header_content)
 		end
 	end
 	if remote_file_size and remote_file_size ~= local_file_size then
-		log(string.format("校验出错：远程 %dB, 下载 %dB", remote_file_size, local_file_size))
+		log(string.format("Verification error：remote %dB, download %dB", remote_file_size, local_file_size))
 		return true
 	end
 	return false
@@ -368,7 +368,7 @@ end
 
 local function GeoToRule(rule_name, rule_type, out_path)
 	if not api.is_finded("geoview") then
-		log(rule_name .. "生成失败，缺少 geoview 组件。")
+		log(rule_name .. "Build failed，Lack geoview components。")
 		return false;
 	end
 	local geosite_path = asset_location .. "geosite.dat"
@@ -401,9 +401,9 @@ local function fetch_rule(rule_name, rule_type, url, exclude_domain, max_retries
 	local rule_final_path = rule_path .. "/" .. rule_name
 	if geo2rule == "1" then
 		url = {"geo2rule"}
-		log(rule_name.. " 开始生成...")
+		log(rule_name.. " Start generating...")
 	else
-		log(rule_name.. " 开始更新...")
+		log(rule_name.. " Start updating...")
 	end
 
 	for k, v in ipairs(url) do
@@ -418,7 +418,7 @@ local function fetch_rule(rule_name, rule_type, url, exclude_domain, max_retries
 					break
 				end
 				os.remove(current_file)
-				log(string.format("%s 第%d条规则下载失败 (HTTP:%s)，正在进行第%d次尝试...", rule_name, k, tostring(http_code), i))
+				log(string.format("%s No.%dRule download failed (HTTP:%s)，In progress%dattempts...", rule_name, k, tostring(http_code), i))
 			end
 		else
 			if not GeoToRule(rule_name, rule_type, current_file) then return 1 end
@@ -478,7 +478,7 @@ local function fetch_rule(rule_name, rule_type, url, exclude_domain, max_retries
 			end
 		else
 			sret = 0
-			log(string.format("%s 第%d条规则: %s 下载失败！", rule_name, k, v))
+			log(string.format("%s No.%drules: %s Download failed！", rule_name, k, v))
 		end
 		os.remove(current_file)
 	end
@@ -510,13 +510,13 @@ local function fetch_rule(rule_name, rule_type, url, exclude_domain, max_retries
 			end
 			os.execute(string.format("mv -f %s %s", file_tmp, rule_final_path))
 			if not rollback then reboot = 1 end
-			log(string.format("%s 更新成功，总规则数 %d 条。", rule_name, #result_list))
+			log(string.format("%s Update successful，Total number of rules %d strip。", rule_name, #result_list))
 		else
-			log(rule_name .. " 版本一致，无需更新。")
+			log(rule_name .. " Version consistent，No update required。")
 			os.remove(file_tmp)
 		end
 	else
-		log(rule_name .. " 更新失败（部分或全部资源无法下载）。")
+		log(rule_name .. " Update failed（Some or all resources cannot be downloaded）。")
 		os.remove(file_tmp)
 	end
 	return 0
@@ -551,7 +551,7 @@ local function fetch_geofile(geo_name, geo_type, url)
 		if fs.access(asset_path) then
 			sys.call(string.format("cp -f %s %s", asset_path, tmp_path))
 			if verify_sha256(sha_path) then
-				log(geo_type .. " 版本一致，无需更新。")
+				log(geo_type .. " Version consistent，No update required。")
 				return 0
 			end
 		end
@@ -559,12 +559,12 @@ local function fetch_geofile(geo_name, geo_type, url)
 
 	local sret_tmp, header = curl(url, tmp_path)
 	if sret_tmp == 200 and non_file_check(tmp_path, header) then
-		log(geo_type .. " 下载文件过程出错，尝试重新下载。")
+		log(geo_type .. " An error occurred while downloading the file，Try downloading again。")
 		os.remove(tmp_path)
 		sret_tmp, header= curl(url, tmp_path)
 		if sret_tmp == 200 and non_file_check(tmp_path, header) then
 			sret_tmp = 0
-			log(geo_type .. " 下载文件过程出错，请检查网络或下载链接后重试！")
+			log(geo_type .. " An error occurred while downloading the file，Please check the network or download link and try again！")
 		end
 	end
 	if sret_tmp == 200 then
@@ -573,25 +573,25 @@ local function fetch_geofile(geo_name, geo_type, url)
 				sys.call(string.format("mkdir -p %s && mv -f %s %s", backup_path, asset_path, backup_path))
 				sys.call(string.format("mkdir -p %s && mv -f %s %s", asset_location, tmp_path, asset_path))
 				reboot = 1
-				log(geo_type .. " 更新成功。")
+				log(geo_type .. " Update successful。")
 				if geo_type == "geoip" then
 					geoip_update_ok = true
 				else
 					geosite_update_ok = true
 				end
 			else
-				log(geo_type .. " 更新失败，请稍后重试或更换更新URL。")
+				log(geo_type .. " Update failed，Please try again later or updateURL。")
 				return 1
 			end
 		else
 			if fs.access(asset_path) and sys.call(string.format("cmp -s %s %s", tmp_path, asset_path)) == 0 then
-				log(geo_type .. " 版本一致，无需更新。")
+				log(geo_type .. " Version consistent，No update required。")
 				return 0
 			end
 			sys.call(string.format("mkdir -p %s && mv -f %s %s", backup_path, asset_path, backup_path))
 			sys.call(string.format("mkdir -p %s && mv -f %s %s", asset_location, tmp_path, asset_path))
 			reboot = 1
-			log(geo_type .. " 更新成功。")
+			log(geo_type .. " Update successful。")
 			if geo_type == "geoip" then
 				geoip_update_ok = true
 			else
@@ -599,7 +599,7 @@ local function fetch_geofile(geo_name, geo_type, url)
 			end
 		end
 	else
-		log(geo_type .. " 更新失败，请稍后重试或更换更新URL。")
+		log(geo_type .. " Update failed，Please try again later or updateURL。")
 		return 1
 	end
 	return 0
@@ -663,7 +663,7 @@ if geo2rule ~= "1" and gfwlist_update == "0" and chnroute_update == "0" and chnr
 	os.exit(0)
 end
 
-log("开始更新规则...")
+log("Start updating rules...")
 local function safe_call(func, err_msg)
 	xpcall(func, function(e)
 		log(e)
@@ -679,64 +679,64 @@ end
 
 if geo2rule == "1" then
 	if geoip_update == "1" and not rollback then
-		log("geoip 开始更新...")
-		safe_call(fetch_geoip, "更新geoip发生错误...")
+		log("geoip Start updating...")
+		safe_call(fetch_geoip, "renewgeoipAn error occurred...")
 		remove_tmp_geofile("geoip")
 	end
 
 	if geosite_update == "1" and not rollback then
-		log("geosite 开始更新...")
-		safe_call(fetch_geosite, "更新geosite发生错误...")
+		log("geosite Start updating...")
+		safe_call(fetch_geosite, "renewgeositeAn error occurred...")
 		remove_tmp_geofile("geosite")
 	end
 
-	-- 如果是手动更新(arg2存在)始终生成规则
+	-- If updating manually(arg2exist)Always generate rules
 	if arg2 then geoip_update_ok, geosite_update_ok = true, true end
 	chnroute_update, chnroute6_update, gfwlist_update, chnlist_update = "1", "1", "1", "1"
 
 	if geoip_update_ok then
 		if fs.access(asset_location .. "geoip.dat") then
-			safe_call(fetch_chnroute, "生成chnroute发生错误...")
-			safe_call(fetch_chnroute6, "生成chnroute6发生错误...")
+			safe_call(fetch_chnroute, "generatechnrouteAn error occurred...")
+			safe_call(fetch_chnroute6, "generatechnroute6An error occurred...")
 		else
-			log("geoip.dat 文件不存在,跳过规则生成。")
+			log("geoip.dat File does not exist,Skip rule generation。")
 		end
 	end
 
 	if geosite_update_ok then
 		if fs.access(asset_location .. "geosite.dat") then
-			safe_call(fetch_gfwlist, "生成gfwlist发生错误...")
-			safe_call(fetch_chnlist, "生成chnlist发生错误...")
+			safe_call(fetch_gfwlist, "generategfwlistAn error occurred...")
+			safe_call(fetch_chnlist, "generatechnlistAn error occurred...")
 		else
-			log("geosite.dat 文件不存在,跳过规则生成。")
+			log("geosite.dat File does not exist,Skip rule generation。")
 		end
 	end
 else
 	if gfwlist_update == "1" then
-		safe_call(fetch_gfwlist, "更新gfwlist发生错误...")
+		safe_call(fetch_gfwlist, "renewgfwlistAn error occurred...")
 	end
 
 	if chnroute_update == "1" then
-		safe_call(fetch_chnroute, "更新chnroute发生错误...")
+		safe_call(fetch_chnroute, "renewchnrouteAn error occurred...")
 	end
 
 	if chnroute6_update == "1" then
-		safe_call(fetch_chnroute6, "更新chnroute6发生错误...")
+		safe_call(fetch_chnroute6, "renewchnroute6An error occurred...")
 	end
 
 	if chnlist_update == "1" then
-		safe_call(fetch_chnlist, "更新chnlist发生错误...")
+		safe_call(fetch_chnlist, "renewchnlistAn error occurred...")
 	end
 
 	if geoip_update == "1" then
-		log("geoip 开始更新...")
-		safe_call(fetch_geoip, "更新geoip发生错误...")
+		log("geoip Start updating...")
+		safe_call(fetch_geoip, "renewgeoipAn error occurred...")
 		remove_tmp_geofile("geoip")
 	end
 
 	if geosite_update == "1" then
-		log("geosite 开始更新...")
-		safe_call(fetch_geosite, "更新geosite发生错误...")
+		log("geosite Start updating...")
+		safe_call(fetch_geosite, "renewgeositeAn error occurred...")
 		remove_tmp_geofile("geosite")
 	end
 end
@@ -758,8 +758,8 @@ if reboot == 1 then
 		end
 	end
 
-	log("重启服务，应用新的规则。")
+	log("Restart service，Apply new rules。")
 	uci:set(name, "@global[0]", "flush_set", "1")
 	api.uci_save(uci, name, true, true)
 end
-log("规则更新完毕...\n")
+log("Rules updated...\n")

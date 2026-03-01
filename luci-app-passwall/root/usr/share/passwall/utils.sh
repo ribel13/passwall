@@ -26,7 +26,7 @@ clean_log() {
 	logsnum=$(cat $LOG_FILE 2>/dev/null | wc -l)
 	[ "$logsnum" -gt 1000 ] && {
 		echo "" > $LOG_FILE
-		echolog "日志文件过长，清空处理！"
+		echolog "Log file is too long，Clear processing！"
 	}
 }
 
@@ -201,7 +201,7 @@ check_host() {
 	local f=${1}
 	a=$(echo $f | grep "\/")
 	[ -n "$a" ] && return 1
-	# 判断是否包含汉字~
+	# Determine whether it contains Chinese characters~
 	local tmp=$(echo -n $f | awk '{print gensub(/[!-~]/,"","g",$0)}')
 	[ -n "$tmp" ] && return 1
 	return 0
@@ -309,16 +309,16 @@ check_ver() {
 		eval v1=\$v1_$i
 		eval v2=\$v2_$i
 		if [ "$v1" -gt "$v2" ]; then
-			# $1 大于 $2
+			# $1 greater than $2
 			echo 0
 			return
 		elif [ "$v1" -lt "$v2" ]; then
-			# $1 小于 $2
+			# $1 less than $2
 			echo 1
 			return
 		fi
 	done
-	# $1 等于 $2
+	# $1 equal $2
 	echo 255
 }
 
@@ -381,7 +381,7 @@ has_1_65535() {
 add_ip2route() {
 	local ip=$(get_host_ip "ipv4" $1)
 	[ -z "$ip" ] && {
-		echolog "  - 无法解析[${1}]，路由表添加失败！"
+		echolog "  - Unable to parse[${1}]，Routing table addition failed！"
 		return 1
 	}
 	local remarks="${1}"
@@ -395,9 +395,9 @@ add_ip2route() {
 	if [ -n "${gateway}" ]; then
 		route add -host ${ip} gw ${gateway} dev ${device} >/dev/null 2>&1
 		echo "$ip" >> $TMP_ROUTE_PATH/${device}
-		echolog "  - [${remarks}]添加到接口[${device}]路由表成功！"
+		echolog "  - [${remarks}]Add to interface[${device}]Routing table successful！"
 	else
-		echolog "  - [${remarks}]添加到接口[${device}]路由表失功！原因是找不到[${device}]网关。"
+		echolog "  - [${remarks}]Add to interface[${device}]Routing table failure！The reason is that it cannot be found[${device}]gateway。"
 	fi
 }
 
@@ -423,10 +423,10 @@ ln_run() {
 			ln -s "${file_func}" "${TMP_BIN_PATH}/${ln_name}" >/dev/null 2>&1
 			file_func="${TMP_BIN_PATH}/${ln_name}"
 		}
-		[ -x "${file_func}" ] || echolog "  - $(readlink ${file_func}) 没有执行权限，无法启动：${file_func} $*"
+		[ -x "${file_func}" ] || echolog "  - $(readlink ${file_func}) no execute permission，Unable to start：${file_func} $*"
 	fi
 	#echo "${file_func} $*" >&2
-	[ -n "${file_func}" ] || echolog "  - 找不到 ${ln_name}，无法启动..."
+	[ -n "${file_func}" ] || echolog "  - not found ${ln_name}，Unable to start..."
 	[ "${output}" != "/dev/null" ] && [ "${ln_name}" != "chinadns-ng" ] && {
 		local persist_log_path=$(config_t_get global persist_log_path)
 		local sys_log=$(config_t_get global sys_log "0")
@@ -439,12 +439,12 @@ ln_run() {
 		if [ -n "${persist_log_path}" ]; then
 			mkdir -p ${persist_log_path}
 			local log_file=${persist_log_path}/passwall_${protocol}_${ln_name}_$(date '+%F').log
-			echolog "记录到持久性日志文件：${log_file}"
+			echolog "Logging to a persistent log file：${log_file}"
 			${file_func:-echolog " - ${ln_name}"} "$@" >> ${log_file} 2>&1 &
 			sys_log=0
 		fi
 		if [ "${sys_log}" == "1" ]; then
-			echolog "记录 ${ln_name}_${protocol} 到系统日志"
+			echolog "Record ${ln_name}_${protocol} to system log"
 			${file_func:-echolog " - ${ln_name}"} "$@" 2>&1 | logger -t PASSWALL_${protocol}_${ln_name} &
 		fi
 	fi

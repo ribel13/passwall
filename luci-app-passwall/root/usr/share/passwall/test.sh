@@ -63,7 +63,7 @@ url_test_node() {
 		sleep 1s
 		local probeUrl=$(config_t_get global_other url_test_url https://www.google.com/generate_204)
 		result=$(curl --connect-timeout 3 --max-time 5 -o /dev/null -I -skL -w "%{http_code}:%{time_pretransfer}" -x ${curlx} "${probeUrl}")
-		# 结束 SS 插件进程
+		# Finish SS Plug-in process
 		local pid_file="/tmp/etc/${CONFIG}/url_test_${node_id}_plugin.pid"
 		[ -s "$pid_file" ] && kill -9 "$(head -n 1 "$pid_file")" >/dev/null 2>&1
 		pgrep -af "url_test_${node_id}" | awk '! /test\.sh/{print $1}' | xargs kill -9 >/dev/null 2>&1
